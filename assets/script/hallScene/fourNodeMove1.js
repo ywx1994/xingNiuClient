@@ -8,8 +8,6 @@
 //  - [Chinese] http://www.cocos.com/docs/creator/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/editors_and_tools/creator-chapters/scripting/life-cycle-callbacks/index.html
 
-var AutoReconnectWsRpcClient = require("AutoReconnectWsRpcClient")
-
 cc.Class({
     extends: cc.Component,
 
@@ -33,16 +31,16 @@ cc.Class({
 
     // LIFE-CYCLE CALLBACKS:
 
-    // onLoad () {},
+    onLoad () {
+        let action1 = cc.moveBy(1.3, 0, 10);
+        let action2 = cc.moveBy(1.3, 0, -10);
+        let seq1 = cc.repeatForever(cc.sequence(action2, action1));
+        this.node.runAction(seq1);
+
+    },
 
     start () {
-        var client = new AutoReconnectWsRpcClient();
-        client.connect("ws://127.0.0.1:36502");
-        client.onReady(function (data) {
-            client.proxy.hello("sdfdsf",function () {
-                
-            })
-        })
+
     },
 
     // update (dt) {},

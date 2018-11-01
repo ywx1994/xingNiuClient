@@ -1,3 +1,5 @@
+import global from "../script/commom/global";
+
 function CreatorHelper() {
 
 }
@@ -63,8 +65,6 @@ CreatorHelper.setMoveEvent = function (node,cb) {
 }
 
 
-
-
 //通过路径更换SpriteFrame,固定大小
 CreatorHelper.changeSpriteFrame = function (sprite, url) {
     cc.loader.loadRes(url, cc.SpriteFrame, function (err, spriteFrame) {
@@ -117,7 +117,6 @@ CreatorHelper.changeSpriteFrameWithServerUrlForWeb = function (sprite, url) {
         }
     });
 }
-
 //native模式下从远程下载并更换图片(只支持png格式的文件下载，后面有需要在改)
 CreatorHelper.changeSpriteFrameWithServerUrlForNative = function (sprite, url) {
     var MD5 = require("MD5");

@@ -1,5 +1,6 @@
 import global from "../commom/global";
 var UnitTools = require("./../../tools/UnitTools.js");
+var NetWorkManager = require("./../../tools/NetWorkManager.js");
 cc.Class({
     extends: cc.Component,
 
@@ -12,54 +13,27 @@ cc.Class({
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
-        //cc.sys.localStorage.setItem('uid', "zzz");
-        var localUID = cc.sys.localStorage.getItem('uid');
-        if (localUID) {
-            UnitTools.request("http://192.168.2.226:3001/weixinlogin",{
-                uid:localUID,
-                platform:"android",
-                ip:"192.168.1.1"
-            },(err, data)=> {
-                if (err) {
-                    global.tips = "登陆失败";
-                    let tips = cc.instantiate(this.tipsPrefab);
-                    tips.parent = this.node;
-                } else {
-                    let playerData = JSON.parse(data);
-                    global.playerData.nickName = playerData.nickName;
-                    global.playerData.avatarUrl = playerData.avatarUrl;
-                    global.playerData.sex = playerData.sex;
-                    global.playerData.city = playerData.city;
-                    global.playerData.diamond = playerData.diamond;
-                    global.playerData.accountID = playerData.accountID;
-                    cc.director.loadScene('hallScene');
-                }
-            },5000);
-        }
-
-
-        if (cc.sys.isMobile && cc.userPlugin === undefined) {
+        if (cc.sys.isMobile) {
             let agent = anysdk.agentManager;
-            cc.userPlugin = agent.getUserPlugin();
+            if (cc.userPlugin === undefined) {
+                cc.userPlugin = agent.getUserPlugin();
+            }
+            if (cc.userPlugin === undefined) {
+                cc.sharePlugin = agent.getSharePlugin();
+            }
             cc.userPlugin.setListener((code, msg) => {
                 switch (code) {
                     case anysdk.UserActionResultCode.kLoginSuccess:
                         let userInfo = cc.userPlugin.getUserInfo();
                         let userInfoJson = JSON.parse(userInfo);
-                        localUID = userInfoJson.uid;
-                        cc.sys.localStorage.setItem('uid', localUID);//存uid到本地
-                        global.playerData.nickName = userInfoJson.nickName;
-                        global.playerData.avatarUrl = userInfoJson.avatarUrl;
-                        global.playerData.sex = userInfoJson.sex;
-                        global.playerData.city = userInfoJson.city;
+                        cc.sys.localStorage.setItem('uid', userInfoJson.uid);//存uid到本地
                         UnitTools.request("http://192.168.2.226:3001/weixinRegister",{
                             uid:localUID,
-                            nickName:global.playerData.nickName,
-                            avatarUrl:global.playerData.avatarUrl,
-                            sex:global.playerData.sex,
-                            city:global.playerData.city,
-                            platform:"android",
-                            ip:"127.0.0.1"
+                            nickName:userInfoJson.nickName,
+                            avatarUrl:userInfoJson.avatarUrl,
+                            sex:userInfoJson.sex,
+                            city:userInfoJson.city,
+                            platform:cc.sys.os
                         },(err, data)=> {
                             if (err) {
                                 global.tips = "登陆失败";
@@ -67,9 +41,11 @@ cc.Class({
                                 tips.parent = this.node;
                             } else {
                                 let playerData = JSON.parse(data);
-                                global.playerData.diamond = playerData.diamond;
                                 global.playerData.accountID = playerData.accountID;
-                                cc.director.loadScene('hallScene');
+                                NetWorkManager.connectAndAuthToHall(playerData.hallIP);
+                                NetWorkManager.onConnectedToHall(()=>{
+                                    cc.director.loadScene('hallScene');
+                                })
                             }
                         },5000);
                         break;
@@ -96,7 +72,27 @@ cc.Class({
                 }
             }, this);
         }
-
+        //cc.sys.localStorage.setItem('uid', "zzz");
+        var localUID = cc.sys.localStorage.getItem('uid');
+        if (localUID) {
+            UnitTools.request("http://192.168.2.226:3001/weixinlogin",{
+                uid:localUID,
+                platform:cc.sys.os
+            },(err, data)=> {
+                if (err) {
+                    global.tips = "登陆失败";
+                    let tips = cc.instantiate(this.tipsPrefab);
+                    tips.parent = this.node;
+                } else {
+                    let playerData = JSON.parse(data);
+                    global.playerData.accountID = playerData.accountID;
+                    NetWorkManager.connectAndAuthToHall(playerData.hallIP);
+                    NetWorkManager.onConnectedToHall(()=>{
+                        cc.director.loadScene('hallScene');
+                    })
+                }
+            },5000);
+        }
     },
 
     start () {

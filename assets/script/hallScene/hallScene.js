@@ -1,5 +1,6 @@
 import global from "../commom/global";
-
+var NetWorkManager = require("./../../tools/NetWorkManager");
+var ScreenShot = require("../../tools/ScreenShot");
 cc.Class({
     extends: cc.Component,
 
@@ -21,7 +22,6 @@ cc.Class({
             this.sexList[i].active = (i === global.playerData.sex-1);
         }
         cc.loader.load({url:global.playerData.avatarUrl,type:'png'}, (err, tex)=> {
-            cc.log('sss'+(tex instanceof cc.Texture2D));
             this.headImage.spriteFrame =new cc.SpriteFrame(tex);
         });
     },
@@ -32,5 +32,29 @@ cc.Class({
 
     update (dt) {
         this.diamond.string = global.playerData.diamond;
+    },
+    onButtonClick(event,customData){
+      switch (customData) {
+          case "jietu":
+              var shot = new ScreenShot();
+              ScreenShot.clearImage("shot.png");
+              shot.shot();
+              shot.saveToFile("shot.png",cc.ImageFormat.PNG,()=>{
+                  if (cc.sharePlugin === undefined) {
+                      var agent = anysdk.agentManager;
+                      cc.sharePlugin = agent.getSharePlugin();
+                  }
+                  var info = {
+                      shareTo: 0,
+                      mediaType: 1,
+                      imagePath: jsb.fileUtils.getWritablePath()+"shot.png",
+                      thumbImage: jsb.fileUtils.getWritablePath()+"shot.png"
+                  };
+                  cc.sharePlugin.share(info);
+              });
+
+
+              break;
+      }
     },
 });
